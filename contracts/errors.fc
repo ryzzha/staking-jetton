@@ -1,0 +1,1 @@
+const error::unknown_op = 0xffff;
