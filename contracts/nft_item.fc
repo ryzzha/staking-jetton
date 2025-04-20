@@ -92,7 +92,7 @@ int min_tons_for_storage() asm "50000000 PUSHINT"; ;; 0.05 TON
 
     (int init?, int index, slice collection_address, slice owner_address, cell content) = load_data();
     if (~ init?) {
-      throw_unless(405, equal_slices(collection_address, sender_address));
+      throw_unless(405, equal_slices_bits(collection_address, sender_address));
       store_data(index, collection_address, in_msg_body~load_msg_addr(), in_msg_body~load_ref());
       return ();
     }
@@ -108,14 +108,35 @@ int min_tons_for_storage() asm "50000000 PUSHINT"; ;; 0.05 TON
       send_msg(sender_address, 0, op::report_static_data(), query_id, begin_cell().store_uint(index, 256).store_slice(collection_address), 64);  ;; carry all the remaining value of the inbound message
       return ();
     }
+    if (op == op::unstake) {
+      throw_unless(error::not_owner, equal_slices_bits(owner_address, sender_address));
+      slice staking_params = content.begin_parse();
+      int unlock_time = staking_params~load_uint(64);
+      throw_unless(error::time_not_yet, now() >= unlock_time);
+      send_msg(collection_address,0,op::process_unstake,query_id,begin_cell().store_uint(index, 256).store_slice(owner_address).store_ref(content),64)
+      return ();
+    }
+    if (op == op::destroy) {
+      throw_unless(error::wrong_sender, equal_slices_bits(collection_address, sender_address));
+      send_msg(in_msg_body~load_msg_addr(), 0, op::excesses(), query_id, null(), 128);
+      owner_address = address_none();
+      store_data(index,collection_address,owner_address,content)
+      return ();
+    }
     throw(0xffff);
 }
-
-;;
-;;  GET Methods
-;;
 
 (int, int, slice, slice, cell) get_nft_data() method_id {
   (int init?, int index, slice collection_address, slice owner_address, cell content) = load_data();
   return (init?, index, collection_address, owner_address, content);
+}
+
+(int, int, int) get_stake_info() method_id {
+  (_, _, _, _, cell content) = load_data();
+  slice staking_innfo = content~begin_parse();
+  return (
+    staking_info~load_uint(64), ;; unlock_time
+    staking_info~load_coins(), ;; interest
+    staking_info~load_coins() ;; stake_size
+  );
 }

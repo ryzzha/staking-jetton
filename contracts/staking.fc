@@ -61,9 +61,8 @@
     if (op == op::transfer_notification) { 
         (int jetton_amount, slice from_user) = (in_msg_body~load_coins(), in_msg_body~load_msg_addr());
         ifnot((equal_slices_bits(sender_address,storage::jetton_wallet_address)) & (msg_value >= min_tons_for_nft_deploy)) {
-            ;; TODO
-            builder jtn_transfer_body = create_jtn_transfer_body();
-            send_simple_message();
+            builder jtn_transfer_body = create_simple_transfer_body(query_id, jetton_amount, from_user);
+            send_message(0x10, 0, sender_address, jtn_transfer_body, 64);
             return ();
         }
 
@@ -74,13 +73,13 @@
         storage::current_reward += interest;
 
         if(storage::total_reward < storage::current_reward) {
-            builder jtn_transfer_body = create_jtn_transfer_body();
-            send_simple_message();
+            builder jtn_transfer_body = create_simple_transfer_body_with_payload(query_id, jetton_amount, from_user, begin_cell().store_uint(0,32).store_slice("no reward"));
+            send_message(0x10, 0, sender_address, jtn_transfer_body, 64)
             return ();
         }
 
         int now = now();
-        cell nft_payload = begin_cell()
+        cell nft_content = begin_cell()
             .store_slice(from_user)
             .store_ref(
                 begin_cell()
@@ -91,12 +90,29 @@
             )
         .end_cell();
 
-        deploy_nft_item(storage::next_item_index,storage::nft_item_code,min_tons_for_nft_deploy,nft_payload);
+        deploy_nft_item(storage::next_item_index,storage::nft_item_code,min_tons_for_nft_deploy,nft_content);
 
         storage::next_item_index += 1;
         storage::total_reward -= interest;
         save_data();
 
+        return ();
+    }
+
+    if(op == op::process_unstake) {
+        int idx = in_msg_body~load_uint(256);
+        throw_unless(error::wrong_sender, (calculate_nft_item_address(0,calculate_nft_item_state_init(idx,nft_item_code))));
+        slice from_user = in_msg_body~load_msg_addr();
+        slice staking_params = in_msg_body~load_ref().begin_parse();
+        staking_params~skip_bits(64);
+        int interest = staking_params~load_coins();
+        int stake_size = staking_params~load_coins();
+
+        builder nft_destroy_body = begin_cell().store_uint(op::destroy,32).store_uint(query_id, 64).store_slice(from_user).end_cell(); 
+        send_message(0x10,msg_value - min_tons_for_nft_destroy,sender_address,nft_destroy_body,0);
+
+        builder jtn_transfer_body = create_simple_transfer_body(query_id, stake_size + interest, from_user); 
+        send_message(0x10,msg_value - min_tons_for_nft_destroy - min_tons_for_unstake,storage::jetton_wallet_address,jtn_transfer_body.end_cell(),64);
         return ();
     }
     
@@ -133,4 +149,19 @@ cell get_nft_content(int index, cell individual_nft_content) method_id {
                       .store_slice(common_content)
                       .store_ref(individual_nft_content)
           .end_cell());
+}
+
+slice get_jetton_wallet_address() method_id {
+    load_data();
+    return storage::jetton_wallet_address;
+}
+
+(int, int, int, int) get_staking_data() method_id {
+    load_data();
+    return (
+        storage::percent_year,
+        storage::lockup_period,
+        storage::current_reward,
+        storage::total_reward
+    );
 }

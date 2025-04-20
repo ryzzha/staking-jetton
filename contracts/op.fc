@@ -11,6 +11,9 @@ int op::fix_price_v4_cancel() asm "0x3 PUSHINT";
 int op::fix_price_v4_change_price() asm "0xfd135f7b PUSHINT";
 int op::fix_price_v4_buy() asm "0x2 PUSHINT";
 
-const op::set_jetton_wallet_address = ee87d2d4; 
+const op::set_jetton_wallet_address = ee87d2d4;  
 const op::top_up_jtn_balance = 77b2286b; 
 const op::transfer_notification = 4fb8dedc; 
+const op::unstake = d5b5e9ad; 
+const op::process_unstake = 13846656; 
+const op::destroy = 10d60a76; 
