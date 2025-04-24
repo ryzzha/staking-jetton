@@ -11,7 +11,7 @@ slice calculate_nft_item_address(int wc, cell state_init) inline {
                      .begin_parse();
 }
 
-() send_message(int flags, int amount, slice to, cell body, int mode) impure inline_ref {
+() send_msg(int flags, int amount, slice to, cell body, int mode) impure inline_ref {
     cell msg = begin_cell()
         .store_uint(flags, 6)
         .store_slice(to)

@@ -1,4 +1,7 @@
 #include "./imports/stdlib.fc";
+#include "./op.fc";
+#include "./errors.fc";
+#include "./params.fc";
 
 int min_tons_for_storage() asm "50000000 PUSHINT"; ;; 0.05 TON
 
@@ -40,7 +43,7 @@ int min_tons_for_storage() asm "50000000 PUSHINT"; ;; 0.05 TON
 }
 
 () transfer_ownership(int my_balance, int index, slice collection_address, slice owner_address, cell content, slice sender_address, int query_id, slice in_msg_body, int fwd_fees) impure inline {
-    throw_unless(401, equal_slices(sender_address, owner_address));
+    throw_unless(401, equal_slices_bits(sender_address, owner_address));
 
     slice new_owner_address = in_msg_body~load_msg_addr();
     force_chain(new_owner_address);
@@ -57,14 +60,14 @@ int min_tons_for_storage() asm "50000000 PUSHINT"; ;; 0.05 TON
       rest_amount -= fwd_fees;
     }
 
-    throw_unless(402, rest_amount >= 0); ;; base nft spends fixed amount of gas, will not check for response
+    throw_unless(error::not_enougth_tons, rest_amount >= 0); ;; base nft spends fixed amount of gas, will not check for response
 
     if (forward_amount) {
-      send_msg(new_owner_address, forward_amount, op::ownership_assigned(), query_id, begin_cell().store_slice(owner_address).store_slice(in_msg_body), 1);  ;; paying fees, revert on errors
+      send_msg(new_owner_address, forward_amount, op::ownership_assigned, query_id, begin_cell().store_slice(owner_address).store_slice(in_msg_body), 1);  ;; paying fees, revert on errors
     }
     if (need_response) {
       force_chain(response_destination);
-      send_msg(response_destination, rest_amount, op::excesses(), query_id, null(), 1); ;; paying fees, revert on errors
+      send_msg(response_destination, rest_amount, op::excesses, query_id, null(), 1); ;; paying fees, revert on errors
     }
 
     store_data(index, collection_address, new_owner_address, content);
@@ -92,7 +95,7 @@ int min_tons_for_storage() asm "50000000 PUSHINT"; ;; 0.05 TON
 
     (int init?, int index, slice collection_address, slice owner_address, cell content) = load_data();
     if (~ init?) {
-      throw_unless(405, equal_slices_bits(collection_address, sender_address));
+      throw_unless(error::wrong_sender, equal_slices_bits(collection_address, sender_address));
       store_data(index, collection_address, in_msg_body~load_msg_addr(), in_msg_body~load_ref());
       return ();
     }
@@ -100,12 +103,12 @@ int min_tons_for_storage() asm "50000000 PUSHINT"; ;; 0.05 TON
     int op = in_msg_body~load_uint(32);
     int query_id = in_msg_body~load_uint(64);
 
-    if (op == op::transfer()) {
+    if (op == op::transfer) {
       transfer_ownership(my_balance, index, collection_address, owner_address, content, sender_address, query_id, in_msg_body, fwd_fee);
       return ();
     }
-    if (op == op::get_static_data()) {
-      send_msg(sender_address, 0, op::report_static_data(), query_id, begin_cell().store_uint(index, 256).store_slice(collection_address), 64);  ;; carry all the remaining value of the inbound message
+    if (op == op::get_static_data) {
+      send_msg(sender_address, 0, op::report_static_data, query_id, begin_cell().store_uint(index, 256).store_slice(collection_address), 64);  ;; carry all the remaining value of the inbound message
       return ();
     }
     if (op == op::unstake) {
@@ -113,14 +116,14 @@ int min_tons_for_storage() asm "50000000 PUSHINT"; ;; 0.05 TON
       slice staking_params = content.begin_parse();
       int unlock_time = staking_params~load_uint(64);
       throw_unless(error::time_not_yet, now() >= unlock_time);
-      send_msg(collection_address,0,op::process_unstake,query_id,begin_cell().store_uint(index, 256).store_slice(owner_address).store_ref(content),64)
+      send_msg(collection_address,0,op::process_unstake,query_id,begin_cell().store_uint(index, 256).store_slice(owner_address).store_ref(content),64);
       return ();
     }
     if (op == op::destroy) {
       throw_unless(error::wrong_sender, equal_slices_bits(collection_address, sender_address));
-      send_msg(in_msg_body~load_msg_addr(), 0, op::excesses(), query_id, null(), 128);
+      send_msg(in_msg_body~load_msg_addr(), 0, op::excesses, query_id, null(), 128);
       owner_address = address_none();
-      store_data(index,collection_address,owner_address,content)
+      store_data(index,collection_address,owner_address,content);
       return ();
     }
     throw(0xffff);
@@ -133,7 +136,7 @@ int min_tons_for_storage() asm "50000000 PUSHINT"; ;; 0.05 TON
 
 (int, int, int) get_stake_info() method_id {
   (_, _, _, _, cell content) = load_data();
-  slice staking_innfo = content~begin_parse();
+  slice staking_info = content.begin_parse();
   return (
     staking_info~load_uint(64), ;; unlock_time
     staking_info~load_coins(), ;; interest

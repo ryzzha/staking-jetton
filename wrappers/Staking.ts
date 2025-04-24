@@ -54,7 +54,7 @@ export class Staking implements Contract {
 
     async sendJettonWalletAddress(provider: ContractProvider, via: Sender, jettonWalletAddress: Address) {
         await provider.internal(via, {
-            value: toNano("0.02"),
+            value: toNano("0.05"),
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: beginCell().storeUint(0xee87d2d4,32).storeUint(0,64).storeAddress(jettonWalletAddress).endCell(),
         });
@@ -70,8 +70,8 @@ export class Staking implements Contract {
         return {
           percentYear: result.readBigNumber(),
           lockupPeriod: result.readNumber(),
-          totalReward: result.readBigNumber(),
           currentReward: result.readBigNumber(),
+          totalReward: result.readBigNumber(),
         };
     }
 
