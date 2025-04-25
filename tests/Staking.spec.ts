@@ -5,6 +5,7 @@ import '@ton/test-utils';
 import { compile } from '@ton/blueprint';
 import { MockJettonMinter } from '../wrappers/MockJettonMinter';
 import { MockJettonWallet } from '../wrappers/MockJettonWallet';
+import { NftItem } from '../wrappers/NftItem';
 
 describe('Staking', () => {
     let stakingCode: Cell;
@@ -22,6 +23,7 @@ describe('Staking', () => {
     let blockchain: Blockchain;
     let owner: SandboxContract<TreasuryContract>;
     let user: SandboxContract<TreasuryContract>;
+    let deployer: SandboxContract<TreasuryContract>;
     let staking: SandboxContract<Staking>;
     let jettonMinter: SandboxContract<MockJettonMinter>;
     let stakingJettonWallet: SandboxContract<MockJettonWallet>;
@@ -34,68 +36,95 @@ describe('Staking', () => {
         owner = await blockchain.treasury('owner');
         user = await blockchain.treasury('user');
 
-        staking = blockchain.openContract(Staking.createFromConfig({
-            owner: owner.address,
-            // percentYear: BigInt(100),
-            percentYear: 3650000000n,
-            lockupPeriod: 10,
-            content: new Cell(),
-            nftItemCode: nftItemCode,
-            royaltyParams: beginCell().storeUint(12, 16).storeUint(100, 16).storeAddress(owner.address).endCell(),
-        }, stakingCode));
+        staking = blockchain.openContract(
+            Staking.createFromConfig(
+                {
+                    owner: owner.address,
+                    percentYear: 3650000000n,
+                    lockupPeriod: 10,
+                    collectionContent: '',
+                    commonContent: '',
+                    nftItemCode: nftItemCode,
+                    royaltyParams: beginCell()
+                        .storeUint(12, 16)
+                        .storeUint(100, 16)
+                        .storeAddress(owner.address)
+                    .endCell()
+                }, 
+                stakingCode
+            )
+        );
 
-        const deployStakingResult = await staking.sendDeploy(owner.getSender(), toNano('0.05'));
+        jettonMinter = blockchain.openContract(
+            MockJettonMinter.createFromConfig(
+                {
+                    adminAddress: owner.address,
+                    content: new Cell(),
+                    jettonWalletCode: mockJettonWalletCode
+                },
+                mockJettonMinterCode
+            )
+        );
 
-        jettonMinter = blockchain.openContract(MockJettonMinter.createFromConfig({
-            adminAddress: owner.address,
-            content: new Cell(),
-            jettonWalletCode: mockJettonWalletCode, 
-        }, mockJettonMinterCode));
+        deployer = await blockchain.treasury('deployer');
 
-        const deployMinterResult = await jettonMinter.sendDeploy(owner.getSender(), toNano('0.05'));
+        await jettonMinter.sendDeploy(deployer.getSender(), toNano('0.05'))
 
-        expect((await blockchain.getContract(jettonMinter.address)).accountState?.type == "active");
+        expect((await blockchain.getContract(jettonMinter.address)).accountState?.type === 'active')
 
-        const mintResult = await jettonMinter.sendMint(owner.getSender(), {
-            toAddress: owner.address,
+        await jettonMinter.sendMint(owner.getSender(), {
+            toAddress: user.address,
             jettonAmount: toNano('10000'),
-            queryId: 0,
-        });
+            queryId: 1
+        })
 
-        stakingJettonWallet = blockchain.openContract(MockJettonWallet.createFromAddress(await jettonMinter.getWalletAddress(staking.address)));
-        ownerJettonWallet = blockchain.openContract(MockJettonWallet.createFromAddress(await jettonMinter.getWalletAddress(owner.address)));
-        userJettonWallet = blockchain.openContract(MockJettonWallet.createFromAddress(await jettonMinter.getWalletAddress(user.address)));
+        await jettonMinter.sendMint(owner.getSender(), {
+            toAddress: owner.address,
+            jettonAmount: toNano('5000'),
+            queryId: 2
+        })
 
-        expect(deployStakingResult.transactions).toHaveTransaction({
-            from: owner.address,
+        userJettonWallet = blockchain.openContract(
+            MockJettonWallet.createFromAddress(await jettonMinter.getWalletAddress(user.address))
+        )
+
+        ownerJettonWallet = blockchain.openContract(
+            MockJettonWallet.createFromAddress(await jettonMinter.getWalletAddress(owner.address))
+        )
+
+        stakingJettonWallet = blockchain.openContract(
+            MockJettonWallet.createFromAddress(await jettonMinter.getWalletAddress(staking.address))
+        )
+
+        const deployResult = await staking.sendDeploy(deployer.getSender(), toNano('0.05'));
+
+        expect(deployResult.transactions).toHaveTransaction({
+            from: deployer.address,
             to: staking.address,
             deploy: true,
             success: true,
         });
     });
 
-    it('should only owner can set jetton wallet address', async () => {
-        const setJettonWalletNotOwner = await staking.sendJettonWalletAddress(user.getSender(), stakingJettonWallet.address);
-        printTransactionFees(setJettonWalletNotOwner.transactions);
+    it('should set jetton wallet address', async () => {
+        const setJettonWalletAddressWrongSenderResult = await staking.sendJettonWalletAddress(user.getSender(), stakingJettonWallet.address)
 
-        // expect(setJettonWalletNotOwner.transactions).toHaveTransaction({
-        //     from: user.address,
-        //     to: staking.address,
-        //     success: false,
-        // });
+        expect(setJettonWalletAddressWrongSenderResult.transactions).toHaveTransaction({
+            from: user.address,
+            to: staking.address,
+            success: false,
+            exitCode: 0xffff
+        })
 
-        const setJettonWalletFromOwner = await staking.sendJettonWalletAddress(owner.getSender(), stakingJettonWallet.address);
+        const setJettonWalletAddressResult = await staking.sendJettonWalletAddress(owner.getSender(), stakingJettonWallet.address)
 
-        printTransactionFees(setJettonWalletFromOwner.transactions);
+        expect(setJettonWalletAddressResult.transactions).toHaveTransaction({
+            from: owner.address,
+            to: staking.address,
+            success: true
+        })
 
-        // expect(setJettonWalletFromOwner.transactions).toHaveTransaction({
-        //     from: owner.address,
-        //     to: staking.address,
-        //     success: true,
-        //     op: 0xee87d2d4,
-        // });
-
-        expect(await staking.getJettonWalletAddress()).toEqual(stakingJettonWallet.address);
+        expect(await staking.getJettonWalletAddress()).toEqualAddress(stakingJettonWallet.address)
     });
 
     it('should owner can send jettons to staking wallet', async () => {
@@ -156,11 +185,31 @@ describe('Staking', () => {
             queryId: 0,
             fwdAmount: toNano('0.05'),
             jettonAmount: toNano('1000'),
-            forwardPayload: beginCell()
-                .storeUint(0x77b2286b, 32)
-                .endCell(),
+            
         })
 
         printTransactionFees(stakeResult.transactions);
+
+        const nftAddress = await staking.getNftAddressByIndex(0n);
+        const nft = blockchain.openContract(NftItem.createFromAddress(nftAddress))
+
+        expect(stakeResult.transactions).toHaveTransaction({
+            from: stakingJettonWallet.address,
+            to: staking.address,
+            op: 0x7362d09c,
+            success: true,
+            value: toNano('0.05'),
+            outMessagesCount: 1
+        })
+        
+        expect(stakeResult.transactions).toHaveTransaction({
+            from: staking.address,
+            to: nftAddress,
+            success: true,
+            deploy: true
+        })
+
+        expect((await blockchain.getContract(nftAddress)).accountState?.type === 'active')
+        expect((await staking.getCollectionData()).nextItemIndex).toEqual(1n)
     });
 });

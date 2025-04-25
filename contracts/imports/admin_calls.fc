@@ -1,10 +1,9 @@
 () handle_admin_messages(int op, int query_id, slice in_msg_body) impure inline {
     if (op == op::set_jetton_wallet_address) {
-        slice new_address = in_msg_body~load_msg_addr();
-        storage::jetton_wallet_address = new_address;
+        storage::jetton_wallet_address = in_msg_body~load_msg_addr();
+        storage::jetton_wallet_address~dump(); 
         save_data();
         return ();
     }
-
     throw(error::unknown_op);
 }
