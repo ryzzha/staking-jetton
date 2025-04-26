@@ -84,8 +84,8 @@ export class MockJettonWallet implements Contract {
             .endCell(),
         });
     }    
-    async getJettonBalance(provider: ContractProvider) {
+    async getJettonBalance(provider: ContractProvider): Promise<bigint> {
         const result = (await provider.get('get_wallet_data', [])).stack;
-        result.readBigNumber();
-    }    
+        return result.readBigNumber()
+    }   
 }
