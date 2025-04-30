@@ -128,43 +128,43 @@ describe('Staking', () => {
     });
 
     it('should owner can send jettons to staking wallet', async () => {
-    //     await staking.sendJettonWalletAddress(owner.getSender(), stakingJettonWallet.address);
+        await staking.sendJettonWalletAddress(owner.getSender(), stakingJettonWallet.address);
 
-    //     const sendJettonToStakeReward = await ownerJettonWallet.sendTransfer(owner.getSender(), {
-    //         toAddress: staking.address,
-    //         queryId: 0,
-    //         fwdAmount: toNano('0.05'),
-    //         jettonAmount: toNano('3500'),
-    //         forwardPayload: beginCell()
-    //             .storeUint(0x77b2286b, 32)
-    //             .endCell(),
-    //     });
+        const sendJettonToStakeReward = await ownerJettonWallet.sendTransfer(owner.getSender(), {
+            toAddress: staking.address,
+            queryId: 0,
+            fwdAmount: toNano('0.05'),
+            jettonAmount: toNano('3500'),
+            forwardPayload: beginCell()
+                .storeUint(0x77b2286b, 32)
+                .endCell(),
+        });
 
-    //     printTransactionFees(sendJettonToStakeReward.transactions);
+        printTransactionFees(sendJettonToStakeReward.transactions);
 
-    //     expect(sendJettonToStakeReward.transactions).toHaveTransaction({
-    //         from: owner.address,
-    //         to: ownerJettonWallet.address,
-    //         success: true,
-    //         op: 0xf8a7ea5,
-    //     });
+        expect(sendJettonToStakeReward.transactions).toHaveTransaction({
+            from: owner.address,
+            to: ownerJettonWallet.address,
+            success: true,
+            op: 0xf8a7ea5,
+        });
 
-    //     expect(sendJettonToStakeReward.transactions).toHaveTransaction({
-    //         from: ownerJettonWallet.address,
-    //         to: stakingJettonWallet.address,
-    //         success: true,
-    //         op: 0x178d4519,
-    //     });
+        expect(sendJettonToStakeReward.transactions).toHaveTransaction({
+            from: ownerJettonWallet.address,
+            to: stakingJettonWallet.address,
+            success: true,
+            op: 0x178d4519,
+        });
 
-    //     expect(sendJettonToStakeReward.transactions).toHaveTransaction({
-    //         from: stakingJettonWallet.address,
-    //         to: staking.address,
-    //         success: true,
-    //         op: 0x7362d09c,
-    //     });
+        expect(sendJettonToStakeReward.transactions).toHaveTransaction({
+            from: stakingJettonWallet.address,
+            to: staking.address,
+            success: true,
+            op: 0x7362d09c,
+        });
 
-        //   expect(await stakingJettonWallet.getJettonBalance()).toEqual(toNano('3500'));
-        //   expect((await staking.getStakingData()).totalReward).toEqual(toNano('3500'));
+          expect(await stakingJettonWallet.getJettonBalance()).toEqual(toNano('3500'));
+          expect((await staking.getStakingData()).totalReward).toEqual(toNano('3500'));
     }); 
 
     it('should can proccess jetton staking', async () => {
