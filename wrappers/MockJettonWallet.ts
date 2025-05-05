@@ -47,7 +47,7 @@ export class MockJettonWallet implements Contract {
     ) {
         const body = beginCell()
             .storeUint(0xf8a7ea5, 32)
-            .storeUint(opts.queryId, 64)
+            .storeUint(0, 64)
             .storeCoins(opts.jettonAmount)
             .storeAddress(opts.toAddress)
             .storeAddress(via.address)
@@ -77,7 +77,7 @@ export class MockJettonWallet implements Contract {
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: beginCell()
                 .storeUint(0x595f07bc, 32)
-                .storeUint(opts.queryId, 64)
+                .storeUint(0, 64)
                 .storeCoins(opts.jettonAmount)
                 .storeAddress(via.address)
                 .storeUint(0, 1)

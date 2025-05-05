@@ -8,6 +8,13 @@ interface StakeInfo {
     stakeSize: bigint;
 }
 
+export type NftData = {
+  index: bigint;
+  collectionAddress: Address;
+  ownerAddress: Address;
+  content: Cell;
+}
+
 export function nftItemConfigToCell(config: NftItemConfig): Cell {
     return beginCell().endCell();
 }
@@ -42,7 +49,7 @@ export class NftItem implements Contract {
           value,
           sendMode: SendMode.PAY_GAS_SEPARATELY,
           body: beginCell()
-            .storeUint(0x5b5e9ad, 32)
+            .storeUint(0xd5b5e9ad, 32)
             .storeUint(0, 64)
             .endCell(),
         });
@@ -56,4 +63,15 @@ export class NftItem implements Contract {
           stakeSize: result.readBigNumber(),
         };
       }
+
+    async getNftData(provider: ContractProvider): Promise<NftData> {
+        const result = (await provider.get('get_nft_data', [])).stack;
+        result.skip(1);
+        return {
+            index: result.readBigNumber(),
+            collectionAddress: result.readAddress(),
+            ownerAddress: result.readAddress(),
+            content: result.readCell()
+        }
+    }   
 }

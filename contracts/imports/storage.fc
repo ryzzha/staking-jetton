@@ -9,8 +9,8 @@ global cell storage::content;
 global cell storage::nft_item_code;
 global cell storage::royalty_params;
 
-() load_data() inline {
-  var ds = get_data().begin_parse();
+() load_data() impure inline {
+  slice ds = get_data().begin_parse();
   storage::owner_address = ds~load_msg_addr();
   storage::jetton_wallet_address = ds~load_msg_addr();
   storage::next_item_index = ds~load_uint(64);

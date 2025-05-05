@@ -96,8 +96,8 @@ export class Staking implements Contract {
         return {
           percentYear: result.readBigNumber(),
           lockupPeriod: result.readNumber(),
-          currentReward: result.readBigNumber(),
           totalReward: result.readBigNumber(),
+          currentReward: result.readBigNumber()
         };
     }
 

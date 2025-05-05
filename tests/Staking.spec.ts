@@ -23,7 +23,6 @@ describe('Staking', () => {
     let blockchain: Blockchain;
     let owner: SandboxContract<TreasuryContract>;
     let user: SandboxContract<TreasuryContract>;
-    let deployer: SandboxContract<TreasuryContract>;
     let staking: SandboxContract<Staking>;
     let jettonMinter: SandboxContract<MockJettonMinter>;
     let stakingJettonWallet: SandboxContract<MockJettonWallet>;
@@ -66,20 +65,18 @@ describe('Staking', () => {
             )
         );
 
-        deployer = await blockchain.treasury('deployer');
-
-        await jettonMinter.sendDeploy(deployer.getSender(), toNano('0.05'))
+        await jettonMinter.sendDeploy(owner.getSender(), toNano('0.05'))
 
         expect((await blockchain.getContract(jettonMinter.address)).accountState?.type === 'active')
 
-        await jettonMinter.sendMint(owner.getSender(), {
-            toAddress: user.address,
+        const mintToOwner = await jettonMinter.sendMint(owner.getSender(), {
+            toAddress: owner.address,
             jettonAmount: toNano('10000'),
             queryId: 1
         })
 
-        await jettonMinter.sendMint(owner.getSender(), {
-            toAddress: owner.address,
+        const mintToUser = await jettonMinter.sendMint(owner.getSender(), {
+            toAddress: user.address,
             jettonAmount: toNano('5000'),
             queryId: 2
         })
@@ -96,15 +93,34 @@ describe('Staking', () => {
             MockJettonWallet.createFromAddress(await jettonMinter.getWalletAddress(staking.address))
         )
 
-        const deployResult = await staking.sendDeploy(deployer.getSender(), toNano('0.05'));
+        // printTransactionFees(mintToOwner.transactions);
+
+        expect(mintToOwner.transactions).toHaveTransaction({
+            from: owner.address,
+            to: jettonMinter.address,
+            success: true,
+            op: 21
+        });
+
+        expect(mintToOwner.transactions).toHaveTransaction({
+            from: jettonMinter.address,
+            to: ownerJettonWallet.address,
+            deploy: true,
+            success: true,
+            op: 0x178d4519
+        });
+
+        const deployResult = await staking.sendDeploy(owner.getSender(), toNano('0.05'));
 
         expect(deployResult.transactions).toHaveTransaction({
-            from: deployer.address,
+            from: owner.address,
             to: staking.address,
             deploy: true,
             success: true,
         });
     });
+
+    it('should deploy', async () => {})
 
     it('should set jetton wallet address', async () => {
         const setJettonWalletAddressWrongSenderResult = await staking.sendJettonWalletAddress(user.getSender(), stakingJettonWallet.address)
@@ -118,10 +134,13 @@ describe('Staking', () => {
 
         const setJettonWalletAddressResult = await staking.sendJettonWalletAddress(owner.getSender(), stakingJettonWallet.address)
 
+        // printTransactionFees(setJettonWalletAddressResult.transactions);
+
         expect(setJettonWalletAddressResult.transactions).toHaveTransaction({
             from: owner.address,
             to: staking.address,
-            success: true
+            success: true, 
+            op: 0xee87d2d4
         })
 
         expect(await staking.getJettonWalletAddress()).toEqualAddress(stakingJettonWallet.address)
@@ -140,7 +159,7 @@ describe('Staking', () => {
                 .endCell(),
         });
 
-        printTransactionFees(sendJettonToStakeReward.transactions);
+        // printTransactionFees(sendJettonToStakeReward.transactions);
 
         expect(sendJettonToStakeReward.transactions).toHaveTransaction({
             from: owner.address,
@@ -188,7 +207,7 @@ describe('Staking', () => {
             
         })
 
-        printTransactionFees(stakeResult.transactions);
+        // printTransactionFees(stakeResult.transactions);
 
         const nftAddress = await staking.getNftAddressByIndex(0n);
         const nft = blockchain.openContract(NftItem.createFromAddress(nftAddress))
@@ -219,7 +238,7 @@ describe('Staking', () => {
 
         await ownerJettonWallet.sendTransfer(owner.getSender(), {
             toAddress: staking.address,
-            jettonAmount: toNano('1000'),
+            jettonAmount: toNano('3000'),
             queryId: 0,
             fwdAmount: toNano('0.05'),
             forwardPayload: beginCell()
@@ -227,12 +246,16 @@ describe('Staking', () => {
             .endCell()
         });
 
+        const totalRewardBefore = (await staking.getStakingData()).totalReward
+
         await userJettonWallet.sendTransfer(user.getSender(), {
             toAddress: staking.address,
             jettonAmount: toNano('1000'),
             fwdAmount: toNano('0.05'),
             queryId: 0,
         })
+
+        const currentRewardBefore = (await staking.getStakingData()).currentReward
 
         const nftAddress = await staking.getNftAddressByIndex(0n);
         const nft = blockchain.openContract(NftItem.createFromAddress(nftAddress))
@@ -251,9 +274,6 @@ describe('Staking', () => {
 
         const interest = (await nft.getStakeInfo()).interest
         const stakeSize = (await nft.getStakeInfo()).stakeSize
-
-        const currentRewardBefore = (await staking.getStakingData()).currentReward
-        const totalRewardBefore = (await staking.getStakingData()).totalReward
 
         const stakingJettonBalanceBefore = await stakingJettonWallet.getJettonBalance();
         const userJettonBalanceBefore = await userJettonWallet.getJettonBalance();
@@ -318,8 +338,10 @@ describe('Staking', () => {
         expect((await blockchain.getContract(nftAddress)).accountState?.type === 'frozen')
         const currentRewardAfter = (await staking.getStakingData()).currentReward
         const totalRewardAfter = (await staking.getStakingData()).totalReward
+
         expect(currentRewardBefore - currentRewardAfter).toEqual(interest)
-        expect(totalRewardBefore - totalRewardAfter).toEqual(interest + stakeSize)
+        expect(totalRewardBefore - totalRewardAfter).toEqual(stakeSize)
+
         const stakingJettonBalanceAfter = await stakingJettonWallet.getJettonBalance();
         const userJettonBalanceAfter = await userJettonWallet.getJettonBalance();
         expect(stakingJettonBalanceBefore - stakingJettonBalanceAfter).toEqual(interest + stakeSize)

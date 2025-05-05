@@ -2,33 +2,9 @@
 #include "imports/op.fc";
 #include "imports/jetton-utils.fc";
 #include "imports/params.fc";
-;; Jetton Wallet Smart Contract
-
-{-
-
-NOTE that this tokens can be transferred within the same workchain.
-
-This is suitable for most tokens, if you need tokens transferable between workchains there are two solutions:
-
-1) use more expensive but universal function to calculate message forward fee for arbitrary destination (see `misc/forward-fee-calc.cs`)
-
-2) use token holder proxies in target workchain (that way even 'non-universal' token can be used from any workchain)
-
--}
 
 int min_tons_for_storage() asm "10000000 PUSHINT"; ;; 0.01 TON
-;; Note that 2 * gas_consumptions is expected to be able to cover fees on both wallets (sender and receiver)
-;; and also constant fees on inter-wallet interaction, in particular fwd fee on state_init transfer
-;; that means that you need to reconsider this fee when:
-;; a) jetton logic become more gas-heavy
-;; b) jetton-wallet code (sent with inter-wallet message) become larger or smaller
-;; c) global fee changes / different workchain
 int gas_consumption() asm "15000000 PUSHINT"; ;; 0.015 TON
-
-{-
-  Storage
-  storage#_ balance:Coins owner_address:MsgAddressInt jetton_master_address:MsgAddressInt jetton_wallet_code:^Cell = Storage;
--}
 
 (int, slice, slice, cell) load_data() inline {
   slice ds = get_data().begin_parse();
