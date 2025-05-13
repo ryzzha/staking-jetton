@@ -1,13 +1,17 @@
-import { useTonAddress } from "@tonconnect/ui-react";
 import { useState } from "react";
+import { useTonConnect } from "../hooks/useTonConnect";
+import { useTonApiClient } from "../hooks/useTonApiClient";
+
 
 
 export const StakeJetton = () => {
-    const walletAddress = useTonAddress();
-    const [jettonAmount, setJettonAmount] = useState();
+    const { wallet } = useTonConnect()
+    const tonApiClient = useTonApiClient();
+    const [jettonAmount, setJettonAmount] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const handleStake = async () => {
-        if (!walletAddress) {
+        if (!wallet) {
         alert("Please connect wallet");
             return;
         }
@@ -17,7 +21,9 @@ export const StakeJetton = () => {
             return;
         }
 
-       
+        setLoading(true);
+
+        setLoading(false);
     }
 
     
@@ -32,26 +38,26 @@ export const StakeJetton = () => {
             <input
               type="number"
               placeholder="Напр. 1000"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              value={jettonAmount}
+              onChange={(e) => setJettonAmount(e.target.value)}
               className="staking-input"
             />
           </div>
     
           <button
             onClick={handleStake}
-            disabled={loading || !amount}
+            // disabled={loading || !jettonAmount}
             className="staking-button"
           >
             {loading ? 'Відправка...' : 'Стейкнути Jetton'}
           </button>
     
           {/* {message && ( */}
-            // <p className="staking-message">{message}</p>
+            {/* // <p className="staking-message">{message}</p> */}
           {/* )} */}
     
           <div className="staking-footer">
-            Твій гаманець: {userAddress ? userAddress : 'Не підключено'}
+            Твій гаманець: {wallet ? wallet : 'Не підключено'}
           </div>
         </div>
       );

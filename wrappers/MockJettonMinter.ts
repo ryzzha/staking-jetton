@@ -15,6 +15,18 @@ export function mockJettonConfigToCell(config: MockJettonMinterConfig): Cell {
     .endCell();
 }
 
+export type JettonMinterContent = {
+    type:0|1,
+    uri:string
+};
+
+export function jettonContentToCell(content: JettonMinterContent) {
+    return beginCell()
+                      .storeUint(content.type, 8)
+                      .storeStringTail(content.uri) //Snake logic under the hood
+           .endCell();
+}
+
 export class MockJettonMinter implements Contract {
     constructor(readonly address: Address, readonly init?: { code: Cell; data: Cell }) {}
 

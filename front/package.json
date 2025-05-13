@@ -10,11 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ton-api/client": "^0.4.0",
     "@ton/core": "^0.60.1",
     "@tonconnect/sdk": "^3.1.0",
     "@tonconnect/ui-react": "^2.1.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "vite-plugin-node-polyfills": "^0.23.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

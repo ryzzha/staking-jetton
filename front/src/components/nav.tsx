@@ -1,15 +1,6 @@
-import { TonConnectButton, useTonConnectUI, useTonAddress } from "@tonconnect/ui-react"
-import { useEffect } from "react";
+import { TonConnectButton } from "@tonconnect/ui-react"
 
 export const Nav = () => {
-    const address = useTonAddress();
-    const [tonConnectUI] = useTonConnectUI();
-
-    useEffect(() => {
-        console.log("render nav")
-        console.log("connected address -> ", address);
-        console.log("tonConnectUI account chain -> ", tonConnectUI.account?.chain);
-    }, [address]);
     
     return (
         <nav>
