@@ -1,34 +1,32 @@
-import { toNano } from '@ton/core';
+import { Address, toNano } from '@ton/core';
 import { jettonContentToCell, MockJettonMinter } from '../wrappers/MockJettonMinter';
 import { compile, NetworkProvider } from '@ton/blueprint';
-import { WalletContractV5R1 } from '@ton/ton';
+import { WalletContractV5R1  } from '@ton/ton';
 import { mnemonicToPrivateKey } from '@ton/crypto';
+import 'dotenv/config';
 
 export async function run(provider: NetworkProvider) {
-    const mnemonic = process.env.MNEMONIC!.split(' ');
+    const mnemonic = process.env.WALLET_MNEMONIC!.split(' ');
     const key = await mnemonicToPrivateKey(mnemonic);
+    const wallet = WalletContractV5R1.create({ workchain: 0, publicKey: key.publicKey });
 
-    const wallet = provider.open(
-        WalletContractV5R1.create({
-            workchain: 0,
-            publicKey: key.publicKey,
-        })
-    );
+    console.log('Address from provider:', provider.sender()?.address);
+    console.log('address from create wallet v5r1:', wallet.address.toString({ testOnly: true }));
 
     const jettonMinterContent = jettonContentToCell({
         type: 1,
-        uri: 'https://raw.githubusercontent.com/X1ag/dywe-manifest/refs/heads/main/jettontester.json?token=GHSAT0AAAAAACWRHBR42XSE2SR46QOGOZ2CZ5MFDZQ',
+        uri: 'https://github.com/ryzzha/staking-jetton/blob/main/jettonRzH.json',
     });
 
     const mockJettonMinter = provider.open(MockJettonMinter.createFromConfig({
-        adminAddress: wallet.address,
+        adminAddress: provider.sender()?.address ?? Address.parse("0QDmfg7wy5akJ_SFntrtJN6xZHGwOODPJNqFMLCa_GeDCtAK"),
         jettonWalletCode: await compile('MockJettonWallet'),
         content: jettonMinterContent,
     }, await compile('MockJettonMinter')));
 
     console.log('Deploying Jetton Minter to:', mockJettonMinter.address.toString());
 
-    await mockJettonMinter.sendDeploy(wallet.sender(key.secretKey), toNano('0.05'));
+    await mockJettonMinter.sendDeploy(provider.sender(), toNano('0.05'));
 
     await provider.waitForDeploy(mockJettonMinter.address);
 
