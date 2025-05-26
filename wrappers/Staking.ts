@@ -67,6 +67,7 @@ export class Staking implements Contract {
     }
 
     async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
+      console.log('Deploying Staking to:', this.address.toString());
         await provider.internal(via, {
             value,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
