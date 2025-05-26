@@ -1,4 +1,4 @@
-import { beginCell, Cell } from '@ton/core';
+import { beginCell, Cell, Dictionary } from '@ton/core';
 
 const OFF_CHAIN_CONTENT_PREFIX = 0x01
 
@@ -76,4 +76,44 @@ export function decodeOffChainContent(content: Cell) {
     throw new Error(`Unknown content prefix: ${prefix.toString(16)}`)
   }
   return data.slice(1).toString()
+}
+
+function storeRefString(value: string): Cell {
+  return beginCell().storeBuffer(Buffer.from(value)).endCell();
+}
+
+export function jettonContentToCellOnchain(data: {
+  name: string;
+  symbol: string;
+  description?: string;
+  image?: string;
+  decimals?: number;
+}): Cell {
+  const dict = Dictionary.empty(
+      Dictionary.Keys.Buffer(64),
+      Dictionary.Values.Cell()    
+  );
+
+  dict.set(Buffer.from("name"), storeRefString(data.name));
+  dict.set(Buffer.from("symbol"), storeRefString(data.symbol));
+
+  if (data.description) {
+      dict.set(Buffer.from("description"), storeRefString(data.description));
+  }
+
+  if (data.image) {
+      dict.set(Buffer.from("image"), storeRefString(data.image));
+  }
+
+  if (data.decimals !== undefined) {
+      dict.set(Buffer.from("decimals"), storeRefString(data.decimals.toString()));
+  }
+
+  const metadataCell = beginCell();
+  dict.store(metadataCell); 
+
+  return beginCell()
+      .storeUint(0, 8)               
+      .storeRef(metadataCell.endCell()) 
+      .endCell();
 }

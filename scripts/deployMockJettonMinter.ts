@@ -4,6 +4,7 @@ import { compile, NetworkProvider } from '@ton/blueprint';
 import { WalletContractV5R1  } from '@ton/ton';
 import { mnemonicToPrivateKey } from '@ton/crypto';
 import 'dotenv/config';
+import { jettonContentToCellOnchain } from '../wrappers/utils/content';
 
 export async function run(provider: NetworkProvider) {
     const mnemonic = process.env.WALLET_MNEMONIC!.split(' ');
@@ -13,9 +14,12 @@ export async function run(provider: NetworkProvider) {
     console.log('Address from provider:', provider.sender()?.address);
     console.log('address from create wallet v5r1:', wallet.address.toString({ testOnly: true }));
 
-    const jettonMinterContent = jettonContentToCell({
-        type: 1,
-        uri: 'https://raw.githubusercontent.com/ryzzha/staking-jetton/main/jettonRzH.json',
+    const jettonMinterContent = jettonContentToCellOnchain({
+        name: "Ryzha",
+        symbol: "RzH",
+        description: "Token for pet project",
+        image: "https://raw.githubusercontent.com/ryzzha/staking-jetton/main/jetton-rzh.png",
+        decimals: 9
     });
 
     const mockJettonMinter = provider.open(MockJettonMinter.createFromConfig({
