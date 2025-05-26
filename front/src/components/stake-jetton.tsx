@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useTonConnect } from "../hooks/useTonConnect";
 import { useTonApiClient } from "../hooks/useTonApiClient";
-
+import { Address } from "@ton/core";
+import "./stake-jetton.css"
 
 
 export const StakeJetton = () => {
@@ -9,6 +10,7 @@ export const StakeJetton = () => {
     const tonApiClient = useTonApiClient();
     const [jettonAmount, setJettonAmount] = useState("");
     const [loading, setLoading] = useState(false);
+
 
     const handleStake = async () => {
         if (!wallet) {
@@ -37,7 +39,7 @@ export const StakeJetton = () => {
             </label>
             <input
               type="number"
-              placeholder="Напр. 1000"
+              placeholder="10"
               value={jettonAmount}
               onChange={(e) => setJettonAmount(e.target.value)}
               className="staking-input"
@@ -57,7 +59,7 @@ export const StakeJetton = () => {
           {/* )} */}
     
           <div className="staking-footer">
-            Твій гаманець: {wallet ? wallet : 'Не підключено'}
+            Твій гаманець: {wallet ? Address.parse(wallet).toString() : 'Не підключено'}
           </div>
         </div>
       );

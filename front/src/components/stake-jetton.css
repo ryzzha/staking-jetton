@@ -1,79 +1,73 @@
 .staking-container {
-    max-width: 36rem;
-    margin: 2.5rem auto 0;
-    padding: 1.5rem;
-    border-radius: 1rem;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
-    background-color: white;
-    border: 1px solid #e5e7eb;
-  }
-  
-  .staking-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    text-align: center;
-  }
-  
-  .staking-input-group {
-    margin-bottom: 1rem;
-  }
-  
-  .staking-label {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #374151;
-    margin-bottom: 0.25rem;
-  }
-  
-  .staking-input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  
-  .staking-input:focus {
-    border-color: #60a5fa;
-    box-shadow: 0 0 0 1px #60a5fa;
-  }
-  
-  .staking-button {
-    width: 100%;
-    padding: 0.5rem 1rem;
-    background-color: #2563eb;
-    color: white;
-    border-radius: 0.5rem;
-    transition: background-color 0.2s;
-    font-weight: 500;
-    cursor: pointer;
-  }
-  
-  .staking-button:hover {
-    background-color: #1d4ed8;
-  }
-  
-  .staking-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  
-  .staking-message {
-    margin-top: 1rem;
-    text-align: center;
-    font-size: 0.875rem;
-    color: #374151;
-  }
-  
-  .staking-footer {
-    margin-top: 1.5rem;
-    border-top: 1px solid #e5e7eb;
-    padding-top: 1rem;
-    text-align: center;
-    font-size: 0.875rem;
-    color: #6b7280;
-  }
-  
+  max-width: 600px;
+  margin: 80px auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  font-family: 'Inter', sans-serif;
+}
+
+.staking-title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #111;
+}
+
+.staking-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.staking-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.staking-input {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  transition: border 0.3s;
+}
+
+.staking-input:focus {
+  outline: none;
+  border-color: #007aff;
+}
+
+.staking-button {
+  width: 100%;
+  background-color: #007aff;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.staking-button:hover {
+  background-color: #005dd1;
+}
+
+.staking-footer {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #555;
+  word-break: break-all;
+}
+
+.staking-address {
+  font-family: monospace;
+  color: #007aff;
+}

@@ -15,7 +15,7 @@ export async function run(provider: NetworkProvider) {
 
     const jettonMinterContent = jettonContentToCell({
         type: 1,
-        uri: 'https://github.com/ryzzha/staking-jetton/blob/main/jettonRzH.json',
+        uri: 'https://raw.githubusercontent.com/ryzzha/staking-jetton/main/jettonRzH.json',
     });
 
     const mockJettonMinter = provider.open(MockJettonMinter.createFromConfig({
