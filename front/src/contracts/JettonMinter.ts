@@ -90,7 +90,7 @@ export class JettonMinter implements Contract {
         return result.stack.readAddress();
     }
 
-    async getTotalsupply(provider: ContractProvider) : Promise<bigint> {
+    async getTotalSupply(provider: ContractProvider) : Promise<bigint> {
         const result = await provider.get('get_jetton_data', []);
         return result.stack.readBigNumber();
     }

@@ -1,53 +1,62 @@
-import { Address, Cell, Slice } from "@ton/core";
+import { Address, Cell } from "@ton/core";
 import { useEffect, useState } from "react";
 import { useTonClient } from "./useTonClient";
 
 export function useStakingNFTs(userAddress: string | null, collectionAddress: string) {
-    const client = useTonClient();
-    const [nfts, setNfts] = useState<string[]>([]);
-    const [loading, setLoading] = useState(true);
+  const client = useTonClient();
+  const [nfts, setNfts] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (!client || !userAddress) return;
+  useEffect(() => {
+    if (!client || !userAddress || !collectionAddress) return;
 
-        const fetch = async () => {
-            setLoading(true);
-            try {
-                const result: string[] = [];
+    const fetchNFTs = async () => {
+      setLoading(true);
+      const result: string[] = [];
 
-                for (let i = 0; i < 100; i++) {
-                    const nftItemAddress = await getNftItemAddress(collectionAddress, i, client);
+      try {
+        for (let i = 0; i < 100; i++) {
+          let nftItemAddress: Address;
 
-                    const contractState = await client.getContractState(nftItemAddress);
-                    if (contractState.state !== "active" || !contractState.data) return;
-                      
+          try {
+            nftItemAddress = await getNftItemAddress(collectionAddress, i, client);
+          } catch {
+            continue;
+          }
 
-                    const cell = Cell.fromBoc(contractState.data)[0];
-                    const slice = cell.beginParse();
-                    const owner = slice.loadAddress().toString();
+          try {
+            const contractState = await client.getContractState(nftItemAddress);
+            if (contractState.state !== "active" || !contractState.data) continue;
 
-                    if (owner === userAddress) {
-                        result.push(nftItemAddress.toString());
-                    }
-                }
+            const cell = Cell.fromBoc(contractState.data)[0];
+            const slice = cell.beginParse();
+            const owner = slice.loadAddress();
 
-                setNfts(result);
-            } catch (err) {
-                console.error("NFT error", err);
-            } finally {
-                setLoading(false);
+            if (owner.toString() === userAddress) {
+              result.push(nftItemAddress.toString());
             }
-        };
+          } catch {
+            continue;
+          }
+        }
 
-        fetch();
-    }, [client, userAddress, collectionAddress]);
+        setNfts(result);
+      } catch (err) {
+        console.error("❌ Error loading NFTs:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return { nfts, loading };
+    fetchNFTs();
+  }, [client, userAddress, collectionAddress]);
+
+  return { nfts, loading };
 }
 
-async function getNftItemAddress(collection: string, index: number, client: any) {
-    const res = await client.runMethod(Address.parse(collection), "get_nft_address_by_index", [
-        { type: "int", value: BigInt(index) },
-    ]);
-    return res.stack.readAddress();
+async function getNftItemAddress(collection: string, index: number, client: any): Promise<Address> {
+  const res = await client.runMethod(Address.parse(collection), "get_nft_address_by_index", [
+    { type: "int", value: BigInt(index) },
+  ]);
+  return res.stack.readAddress();
 }
