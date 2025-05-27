@@ -21,6 +21,7 @@ export async function run(provider: NetworkProvider) {
         image: "https://raw.githubusercontent.com/ryzzha/staking-jetton/main/jetton-rzh.png",
         decimals: 9
     });
+    
 
     const mockJettonMinter = provider.open(MockJettonMinter.createFromConfig({
         adminAddress: provider.sender()?.address ?? Address.parse("0QDmfg7wy5akJ_SFntrtJN6xZHGwOODPJNqFMLCa_GeDCtAK"),
