@@ -1,10 +1,12 @@
 
-import { useUserNFTs } from "../hooks/useUserNFTs";
+import { useStakingNFTs } from "../hooks/useStakingNFTs";
 import { useTonConnect } from "../hooks/useTonConnect";
+
+const STAKING_ADDRESS = "kQBJnxNZL8gBhFKCA8biCJzAMHdFm29yKNppAjio_6Gq1ros";
 
 export const UserNFTs = () => {
     const { wallet } = useTonConnect();
-    const { nfts, loading } = useUserNFTs(wallet);
+    const { nfts, loading } = useStakingNFTs(wallet);
 
     if (!wallet) return <p>Гаманець не підключено</p>;
     if (loading) return <p>Завантаження NFT...</p>;

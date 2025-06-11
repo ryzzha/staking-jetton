@@ -76,7 +76,7 @@ export class Staking implements Contract {
     }
 
     async sendJettonWalletAddress(provider: ContractProvider, via: Sender, jettonWalletAddress: Address) {
-      await provider.internal(via, {
+      return await provider.internal(via, {
           value: toNano('0.02'),
           sendMode: SendMode.PAY_GAS_SEPARATELY,
           body: beginCell()

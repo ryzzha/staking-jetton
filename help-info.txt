@@ -1,3 +1,5 @@
 my testnet address -> 0QDmfg7wy5akJ_SFntrtJN6xZHGwOODPJNqFMLCa_GeDCtAK
 Jetton Minter address: EQApBMzuNYZOxG7jZkgmM6k9bS-QQWAarRW1A5Hh1IxW0CR5
-Staking Jetton address: EQBbihvuS7lZ2i5xQNUOevBKoFgnwmpUWb9BRpRBTfWZfSXK
+Staking Jetton address: EQBJnxNZL8gBhFKCA8biCJzAMHdFm29yKNppAjio_6Gq1gGm
+
+Staking Jetton address: EQBbihvuS7lZ2i5xQNUOevBKoFgnwmpUWb9BRpRBTfWZfSXK // old

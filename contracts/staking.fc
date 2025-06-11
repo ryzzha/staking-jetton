@@ -4,7 +4,6 @@
 #include "imports/op.fc";
 #include "imports/errors.fc";
 #include "imports/params.fc";
-#include "imports/admin_calls.fc";
 
 () deploy_nft_item(int item_index, cell nft_item_code, int amount, cell nft_content) impure inline {
   cell state_init = calculate_nft_item_state_init(item_index, nft_item_code);
@@ -54,7 +53,15 @@
     }
 
     if (equal_slices_bits(sender_address, storage::owner_address)) {
-        handle_admin_messages(op, query_id, in_msg_body);
+        if (op == op::set_jetton_wallet_address) {
+            storage::jetton_wallet_address = in_msg_body~load_msg_addr();
+            storage::jetton_wallet_address~dump();
+            storage::current_reward~dump();
+            storage::owner_address~dump();
+            save_data();
+            return ();
+        }
+        throw(error::unknown_op);
         return ();
     }
 

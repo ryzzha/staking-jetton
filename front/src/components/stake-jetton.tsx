@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useTonConnect } from "../hooks/useTonConnect";
-import { Address, beginCell, toNano } from "@ton/core";
+import { Address, beginCell, toNano, fromNano } from "@ton/core";
 import "./stake-jetton.css"
 import { useTonClient } from "../hooks/useTonClient";
 import { useStakingNFTs } from "../hooks/useStakingNFTs";
 import { useJettonContracts } from "../hooks/useJettonContracts";
+import { useStakingContract } from "../hooks/useStakingContract";
 
 
 export const StakeJetton = () => {
@@ -13,35 +14,46 @@ export const StakeJetton = () => {
     const [jettonToStakeAmount, setJettonToStakeAmount] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const { staking, stakingData, collectionData } = useStakingContract();
     const { jettonWallet, jettonWalletAddress, jettonBalance } = useJettonContracts(wallet);
-    const { nfts } = useStakingNFTs(wallet ? Address.parse(wallet).toString(): null, Address.parse("EQBbihvuS7lZ2i5xQNUOevBKoFgnwmpUWb9BRpRBTfWZfSXK").toString())
-
+    const { nfts } = useStakingNFTs(wallet ? Address.parse(wallet).toString(): null)
 
     const handleStake = async () => {
         if (!jettonWallet) {
-        alert("Please connect wallet");
+        alert("connect wallet");
             return;
         }
 
         if (!jettonToStakeAmount) {
-            alert("Please enter an amount jettons to stake");
+            alert("enter an amount jettons to stake");
             return;
         }
 
         if (!tonClient) {
           alert("connection fail");
           return;
-      }
+        }
+
+        if (!staking) {
+          alert("connection fail");
+          return;
+        }
 
         setLoading(true);
 
+        // const appJettonWalletAddress = await staking.getJettonWalletAddress();
+
+        // console.log("jetton wallet address to procces stake -> " + appJettonWalletAddress)
+
         await jettonWallet.sendTransfer(sender, {
-          toAddress: Address.parse(""),
+          toAddress: Address.parse("kQBJnxNZL8gBhFKCA8biCJzAMHdFm29yKNppAjio_6Gq1ros".toString()),
           queryId: 1,
           jettonAmount: toNano(jettonToStakeAmount), 
           fwdAmount: toNano("0.05"),
-          forwardPayload: beginCell().storeUint(0x736b, 32).endCell(), 
-      });
+          forwardPayload: beginCell()
+            .storeUint(0x77b2286b, 32) // op::stake
+            .endCell(),
+        });
 
         setLoading(false);
     }
@@ -78,8 +90,37 @@ export const StakeJetton = () => {
     
           <div className="staking-footer">
             <p>Твій гаманець: {wallet ? Address.parse(wallet).toString() : 'Не підключено'}</p>
+            <p>Твій жетон гаманець: {jettonWalletAddress ? Address.parse(jettonWalletAddress.toString()).toString() : 'Немає'}</p>
             <p>Твій баланс жетонів: {jettonBalance ? jettonBalance : 'Не підключено'}</p>
           </div>
+        </div>
+        <div className="staking-data">
+          <h2>Інформація про стейкінг:</h2>
+
+          {stakingData ? (
+            <div className="staking-data-block">
+              <p>📈 Річний відсоток: {(Number(stakingData.percentYear) / 10000000 * 100).toFixed(2)}%</p>
+              <p>
+                ⏳ Період блокування:{" "}
+                {Math.floor(Number(stakingData.lockupPeriod) / 86400)} днів{" "}
+                {Math.floor((Number(stakingData.lockupPeriod) % 86400) / 3600)} год.
+              </p>
+              <p>🎁 Всього нагород: {fromNano(stakingData.totalReward)}</p>
+              <p>💰 Поточна нагорода: {fromNano(stakingData.currentReward)}</p>
+            </div>
+          ) : (
+            <p>Завантаження даних стейкінгу...</p>
+          )}
+
+          {collectionData ? (
+            <div className="staking-data-block">
+              <h2>Колекція NFT</h2>
+              <p>🆔 Наступний NFT індекс: {collectionData.nextItemIndex.toString()}</p>
+              <p>👑 Власник колекції: {collectionData.owner.toString()}</p>
+            </div>
+          ) : (
+            <p>Завантаження даних колекції...</p>
+          )}
         </div>
         <div>
           {loading ? (

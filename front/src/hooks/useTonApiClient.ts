@@ -16,7 +16,5 @@ export const useTonApiClient = () => {
         setTonApiClient(client);
     }, [network])
 
-    console.log(tonApiClient);
-
     return tonApiClient;
  }

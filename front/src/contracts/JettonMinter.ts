@@ -1,5 +1,5 @@
-import { Address, beginCell, Cell, contractAddress, SendMode, toNano } from '@ton/core';
-import type { Contract, ContractProvider, Sender, TupleItemSlice } from '@ton/core';
+import { Address, beginCell, Cell, contractAddress, SendMode, toNano } from '@ton/ton';
+import type { Contract, ContractProvider, Sender, TupleItemSlice } from '@ton/ton';
 
 export type MockJettonMinterConfig = {
     adminAddress: Address;

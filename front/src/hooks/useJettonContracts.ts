@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Address, fromNano } from "@ton/core";
+import { Address, fromNano } from "@ton/ton";
 import type { OpenedContract } from "@ton/core";
 import { useTonClient } from "./useTonClient";
 import { JettonMinter } from "../contracts/JettonMinter";
@@ -15,50 +15,45 @@ export function useJettonContracts(userWallet: string | null) {
   const [jettonBalance, setJettonBalance] = useState<string>("");
 
   useEffect(() => {
-    if (!client || !userWallet) return;
+    if (!client) return;
 
-    const init = async () => {
-      // console.log("useJettonContracts init", userWallet);
-      console.log(client); 
-
-
-      const minterAddr = safeParseAddress(JETTON_MINTER_ADDRESS);
-      const userAddr = safeParseAddress(userWallet);
-      if (!userAddr || !minterAddr) {
-        console.error("❌ Failed to parse userWallet:", userWallet);
-        return;
-      }
-
-      const state = await client.getContractState(minterAddr);
-console.log("🔍 Jetton minter state:", state);
-
-      let minter: OpenedContract<JettonMinter>;
+    const initJettonMinter = async () => {
+      let jettonMinter: OpenedContract<JettonMinter>;
       try {
-        console.log("Opening Jetton Minter at address:", JETTON_MINTER_ADDRESS);
-        console.log("Opening Jetton Minter at address after parse:", minterAddr);
-        minter = client.open(JettonMinter.createFromAddress(Address.parse(JETTON_MINTER_ADDRESS)));
-        setJettonMinter(minter);
+        const contract = JettonMinter.createFromAddress(Address.parse(JETTON_MINTER_ADDRESS));
+        jettonMinter = client.open(contract);
+        setJettonMinter(jettonMinter);
       } catch (e) {
         console.error("❌ Error opening minter:", e);
         return;
       }
+    };
 
+    initJettonMinter();
+  }, [client]);
+
+  useEffect(() => {
+    if (!client || !userWallet || !jettonMinter) return;
+
+    const initJettonWallet = async () => {
       try {
-        const walletAddr = await minter.getWalletAddress(userAddr);
+        const walletAddr = await jettonMinter.getWalletAddress(Address.parse(userWallet));
         setJettonWalletAddress(walletAddr);
 
-        const wallet = client.open(JettonWallet.createFromAddress(walletAddr));
+        const contract = JettonWallet.createFromAddress(walletAddr);
+        const wallet = client.open(contract);
         setJettonWallet(wallet);
 
         const balance = await wallet.getJettonBalance();
         setJettonBalance(fromNano(balance));
+        console.log(balance)
       } catch (e) {
         console.error("❌ Error working with wallet:", e);
       }
     };
 
-    init();
-  }, [client, userWallet]);
+    initJettonWallet();
+  }, [client, userWallet, jettonMinter]);
 
   return {
     jettonMinter,
@@ -67,15 +62,3 @@ console.log("🔍 Jetton minter state:", state);
     jettonBalance,
   };
 }
-
-function safeParseAddress(addr: string | null): Address | null {
-  try {
-    if (!addr || addr.length < 48) return null;
-
-    if (addr.includes(':')) return Address.parseRaw(addr); 
-    return Address.parse(addr); 
-  } catch {
-    return null;
-  }
-}
-
