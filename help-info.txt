@@ -1,5 +1,8 @@
-my testnet address -> 0QDmfg7wy5akJ_SFntrtJN6xZHGwOODPJNqFMLCa_GeDCtAK
+my testnet address rzh -> 0QDmfg7wy5akJ_SFntrtJN6xZHGwOODPJNqFMLCa_GeDCtAK
+my testnet address -> 0QCsVmoQBfBjqaTkvJ57Q86G9XWtv1E5Zyl8n64ALBN0YkcF
 Jetton Minter address: EQApBMzuNYZOxG7jZkgmM6k9bS-QQWAarRW1A5Hh1IxW0CR5
+Staking Jetton address: EQA6wXMq3Wq_z3pZr_5KVYRivOHAqRP51rrBcGNRW4xURRmC
+
 Staking Jetton address: EQBJnxNZL8gBhFKCA8biCJzAMHdFm29yKNppAjio_6Gq1gGm
 
 Staking Jetton address: EQBbihvuS7lZ2i5xQNUOevBKoFgnwmpUWb9BRpRBTfWZfSXK // old 
