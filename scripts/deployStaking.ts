@@ -12,8 +12,8 @@ export async function run(provider: NetworkProvider) {
 
     const config: StakingConfig = {
         owner: senderAddress,                          
-        percentYear: BigInt(12000000),                                
-        lockupPeriod: 60 * 60 * 24 * 30,                           
+        percentYear: BigInt(1000000000),                                
+        lockupPeriod: 10,                           
         collectionContent: 'https://raw.githubusercontent.com/ryzzha/staking-jetton/main/nftStaking.json',   
         commonContent: 'https://raw.githubusercontent.com/ryzzha/staking-jetton/main/nfts',      
         nftItemCode: await compile('NftItem'),                      
@@ -25,11 +25,11 @@ export async function run(provider: NetworkProvider) {
     };
 
 
-    // const staking = provider.open(Staking.createFromConfig(config, await compile('Staking')));
+    const staking = provider.open(Staking.createFromConfig(config, await compile('Staking')));
 
-    // await staking.sendDeploy(provider.sender(), toNano('0.05'));
-    // await provider.waitForDeploy(staking.address);
-    // console.log("✅ Deployed to:", staking.address.toString());
+    await staking.sendDeploy(provider.sender(), toNano('0.05'));
+    await provider.waitForDeploy(staking.address);
+    console.log("✅ Deployed to:", staking.address.toString());
     
 
     // run methods on `staking`

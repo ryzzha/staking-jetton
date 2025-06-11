@@ -3,7 +3,7 @@ import { useTonConnect } from "../hooks/useTonConnect";
 import { Address, beginCell, toNano, fromNano } from "@ton/core";
 import "./stake-jetton.css"
 import { useTonClient } from "../hooks/useTonClient";
-import { useStakingNFTs } from "../hooks/useStakingNFTs";
+// import { useStakingNFTs } from "../hooks/useStakingNFTs";
 import { useJettonContracts } from "../hooks/useJettonContracts";
 import { useStakingContract } from "../hooks/useStakingContract";
 
@@ -16,7 +16,7 @@ export const StakeJetton = () => {
 
     const { staking, stakingData, collectionData } = useStakingContract();
     const { jettonWallet, jettonWalletAddress, jettonBalance } = useJettonContracts(wallet);
-    const { nfts } = useStakingNFTs(wallet ? Address.parse(wallet).toString(): null)
+    // const { nfts } = useStakingNFTs(wallet ? Address.parse(wallet).toString(): null)
 
     const handleStake = async () => {
         if (!jettonWallet) {
@@ -47,12 +47,12 @@ export const StakeJetton = () => {
 
         await jettonWallet.sendTransfer(sender, {
           toAddress: Address.parse("kQBJnxNZL8gBhFKCA8biCJzAMHdFm29yKNppAjio_6Gq1ros".toString()),
-          queryId: 1,
-          jettonAmount: toNano(jettonToStakeAmount), 
-          fwdAmount: toNano("0.05"),
-          forwardPayload: beginCell()
-            .storeUint(0x77b2286b, 32) // op::stake
-            .endCell(),
+            queryId: 0,
+            fwdAmount: toNano('0.05'),
+            jettonAmount: toNano(jettonToStakeAmount),
+            forwardPayload: beginCell()
+                .storeUint(0x77b2286b, 32)
+                .endCell(),
         });
 
         setLoading(false);
@@ -123,11 +123,11 @@ export const StakeJetton = () => {
           )}
         </div>
         <div>
-          {loading ? (
+          {/* {loading ? (
             <p>Завантаження NFT...</p>
           ) : (
             nfts.map((nft, i) => <p key={i}>{nft}</p>)
-          )}
+          )} */}
         </div>
       </>
       );
